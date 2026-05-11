@@ -1,141 +1,234 @@
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', () => {
 
-  function isMobile() {
-    return window.innerWidth <= 425;
-  }
+    initCarousels();
+    initProjectButtons();
+    initSidebar();
+    initInfoCards();
 
-  function initCarousel(wrapperSelector, listSelector, cardSelector) {
+});
+
+/*MOBILE CHECK*/
+
+function isMobile() {
+    return window.innerWidth <= 430;
+}
+
+/*CAROUSELS*/
+
+function initCarousels() {
+
+    initCarousel(
+        '.projects-slider',
+        '.projects-list',
+        '.project-card'
+    );
+
+    initCarousel(
+        '.achievements-slider',
+        '.achievements-list',
+        '.achievements-card'
+    );
+
+}
+
+function initCarousel(wrapperSelector, listSelector, cardSelector) {
 
     const wrapper = document.querySelector(wrapperSelector);
     const slider = document.querySelector(listSelector);
     const cards = document.querySelectorAll(cardSelector);
 
-    if (!wrapper || !slider || cards.length === 0) return;
-
-    const gap = 16;
-    const visualOffset = 20;
+    if (!wrapper || !slider || !cards.length) return;
 
     let currentIndex = 0;
+    let startX = 0;
 
     function moveTo(index) {
 
-  const card = cards[index];
+        if (isMobile()) return;
 
-  if (index === 0) {
-    slider.style.transform = `translateX(0px)`;
-  }
+        const card = cards[index];
 
-  else if (index === cards.length - 1) {
+        if (!card) return;
 
-    const wrapperWidth = wrapper.offsetWidth;
-    const sliderWidth = slider.scrollWidth;
+        if (index === 0) {
 
-    const maxTranslate = sliderWidth - wrapperWidth;
+            slider.style.transform = 'translateX(0px)';
 
-    slider.style.transform = `translateX(-${maxTranslate}px)`;
-  }
+        } else if (index === cards.length - 1) {
 
-  else {
+            const maxTranslate =
+                slider.scrollWidth - wrapper.offsetWidth;
 
-    const cardRect = card.getBoundingClientRect();
-    const wrapperRect = wrapper.getBoundingClientRect();
+            slider.style.transform =
+                `translateX(-${maxTranslate}px)`;
 
-    const cardCenter = cardRect.left + cardRect.width / 2;
-    const wrapperCenter = wrapperRect.left + wrapperRect.width / 2;
+        } else {
 
-    const diff = cardCenter - wrapperCenter;
+            const cardRect = card.getBoundingClientRect();
+            const wrapperRect = wrapper.getBoundingClientRect();
 
-    const currentTransform = getComputedStyle(slider).transform;
+            const cardCenter =
+                cardRect.left + cardRect.width / 2;
 
-    let currentX = 0;
+            const wrapperCenter =
+                wrapperRect.left + wrapperRect.width / 2;
 
-    if (currentTransform !== 'none') {
-      const matrix = new DOMMatrix(currentTransform);
-      currentX = matrix.m41;
+            const diff = cardCenter - wrapperCenter;
+
+            const matrix =
+                new DOMMatrix(getComputedStyle(slider).transform);
+
+            const currentX = matrix.m41;
+
+            slider.style.transform =
+                `translateX(${currentX - diff}px)`;
+
+        }
+
+        cards.forEach(card =>
+            card.classList.remove('active')
+        );
+
+        card.classList.add('active');
+
+        currentIndex = index;
     }
 
-    const newTranslate = currentX - diff;
-
-    slider.style.transform = `translateX(${newTranslate}px)`;
-  }
-
-  cards.forEach(c => c.classList.remove('active'));
-  card.classList.add('active');
-
-  currentIndex = index;
-}
-
     cards.forEach((card, index) => {
-      card.addEventListener('click', () => {
-        if (isMobile()) return;
-        moveTo(index);
-      });
+
+        card.addEventListener('click', () => {
+
+            if (isMobile()) return;
+
+            moveTo(index);
+
+        });
+
     });
 
-    let startX = 0;
-    let endX = 0;
-
-    wrapper.addEventListener('touchstart', (e) => {
-      startX = e.touches[0].clientX;
+    wrapper.addEventListener('touchstart', e => {
+        startX = e.touches[0].clientX;
     });
 
-    wrapper.addEventListener('touchend', (e) => {
-      endX = e.changedTouches[0].clientX;
+    wrapper.addEventListener('touchend', e => {
 
-      const diff = startX - endX;
+        const endX = e.changedTouches[0].clientX;
+        const diff = startX - endX;
 
+        if (Math.abs(diff) < 50) return;
 
-      if (Math.abs(diff) < 50) return;
-
-      if (diff > 0) {
-
-        if (currentIndex < cards.length - 1) {
-          moveTo(currentIndex + 1);
+        if (diff > 0 && currentIndex < cards.length - 1) {
+            moveTo(currentIndex + 1);
         }
-      } else {
 
-        if (currentIndex > 0) {
-          moveTo(currentIndex - 1);
+        if (diff < 0 && currentIndex > 0) {
+            moveTo(currentIndex - 1);
         }
-      }
+
+    });
+
+    window.addEventListener('resize', () => {
+
+        if (isMobile()) {
+
+            slider.style.transform = 'none';
+
+        } else {
+
+            moveTo(currentIndex);
+
+        }
+
     });
 
     moveTo(0);
-  }
 
-  initCarousel('.projects-slider', '.projects-list', '.project-card');
-  initCarousel('.achievements-slider', '.achievements-list', '.achievements-card');
+}
 
-  document.querySelectorAll('.project-card_btn').forEach(function (btn) {
+/*PROJECT BUTTONS*/
 
-    btn.addEventListener('mousedown', function () {
-      const card = btn.closest('.project-card');
-      if (card) card.classList.add('no-click-anim');
+function initProjectButtons() {
+
+    const buttons =
+        document.querySelectorAll('.project-card_btn');
+
+    buttons.forEach(button => {
+
+        const card = button.closest('.project-card');
+
+        if (!card) return;
+
+        button.addEventListener('mousedown', () => {
+            card.classList.add('no-click-anim');
+        });
+
+        ['mouseup', 'mouseleave'].forEach(event => {
+
+            button.addEventListener(event, () => {
+                card.classList.remove('no-click-anim');
+            });
+
+        });
+
+        button.addEventListener('click', e => {
+            e.stopPropagation();
+        });
+
     });
 
-    btn.addEventListener('mouseup', function () {
-      const card = btn.closest('.project-card');
-      if (card) card.classList.remove('no-click-anim');
-    });
+}
 
-    btn.addEventListener('mouseleave', function () {
-      const card = btn.closest('.project-card');
-      if (card) card.classList.remove('no-click-anim');
-    });
+/*SIDEBAR*/
 
-    btn.addEventListener('click', function (e) {
-      e.stopPropagation();
-    });
+function initSidebar() {
 
-  });
+    const header =
+        document.querySelector('.mobile-header');
 
-  const header = document.querySelector('.mobile-header');
-  const sidebarWrapper = document.querySelector('.sidebar-wrapper');
+    const sidebarWrapper =
+        document.querySelector('.sidebar-wrapper');
 
-  if (header && sidebarWrapper) {
+    if (!header || !sidebarWrapper) return;
+
     header.addEventListener('click', () => {
-      sidebarWrapper.classList.toggle('active');
+        sidebarWrapper.classList.toggle('active');
     });
-  }
 
-});
+}
+
+/*INFO CARDS*/
+
+function initInfoCards() {
+
+    const buttons =
+        document.querySelectorAll('.info-btn');
+
+    buttons.forEach(button => {
+
+        button.addEventListener('click', () => {
+
+            const card =
+                button.closest('.info-card');
+
+            const about =
+                card?.querySelector('.info-about');
+
+            if (!card || !about) return;
+
+            const isActive =
+                card.classList.toggle('active');
+
+            about.style.maxHeight = isActive
+                ? `${about.scrollHeight}px`
+                : '0px';
+
+            button.childNodes[0].textContent =
+                isActive
+                    ? 'Скрыть'
+                    : 'Подробнее';
+
+        });
+
+    });
+
+}
