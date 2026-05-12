@@ -634,9 +634,9 @@ h2 {
     }
 }
 
-/*430*/
+/*650*/
 
-@media (max-width: 430px) {
+@media (max-width: 650px) {
 
     .page {
         flex-direction: column;
@@ -733,9 +733,9 @@ h2 {
     }
 }
 
-/*320*/
+/*360*/
 
-@media (max-width: 320px) {
+@media (max-width: 360px) {
 
     .sidebar {
         max-height: 125px;
